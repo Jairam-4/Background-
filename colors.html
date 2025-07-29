@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Holi Color Splash</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: black;
+    }
+
+    body {
+      position: relative;
+    }
+
+    .color-splash {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #ff3cac, #784ba0, #2b86c5);
+      background-size: 400% 400%;
+      animation: moveColors 10s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes moveColors {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff, transparent);
+      animation: float 3s linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh) scale(1.2);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="color-splash"></div>
+  <div class="particles" id="particles"></div>
+
+  <script>
+    const colors = ['#ff3cac', '#ffb347', '#00ff99', '#33ccff', '#ff6699', '#ffff66', '#cc99ff'];
+
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      const size = Math.random() * 20 + 10;
+      particle.style.width = `${size}px`;
+      particle.style.height = `${size}px`;
+      particle.style.left = `${Math.random() * window.innerWidth}px`;
+      particle.style.bottom = '0';
+      particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+      particle.style.animationDuration = `${Math.random() * 3 + 2}s`;
+
+      document.getElementById('particles').appendChild(particle);
+
+      setTimeout(() => particle.remove(), 5000);
+    }
+
+    setInterval(createParticle, 100);
+  </script>
+</body>
+</html>
