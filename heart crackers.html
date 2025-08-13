@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heart Fireworks</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: black;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="fireworksCanvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('fireworksCanvas');
+  const ctx = canvas.getContext('2d');
+  resizeCanvas();
+
+  window.addEventListener('resize', resizeCanvas);
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  const fireworks = [];
+  const hearts = [];
+
+  class Firework {
+    constructor(x, y, targetY) {
+      this.x = x;
+      this.y = y;
+      this.targetY = targetY;
+      this.speed = 4;
+      this.exploded = false;
+    }
+
+    update() {
+      this.y -= this.speed;
+      if (this.y <= this.targetY && !this.exploded) {
+        this.explode();
+        this.exploded = true;
+      }
+    }
+
+    explode() {
+      const count = 30;
+      const angleStep = (Math.PI * 2) / count;
+      for (let i = 0; i < count; i++) {
+        const angle = i * angleStep;
+        hearts.push(new HeartParticle(this.x, this.y, angle));
+      }
+    }
+
+    draw() {
+      if (!this.exploded) {
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  class HeartParticle {
+    constructor(x, y, angle) {
+      this.x = x;
+      this.y = y;
+      this.angle = angle;
+      this.speed = Math.random() * 3 + 1.5;
+      this.opacity = 1;
+      this.size = Math.random() * 24 + 16;
+      this.life = 100;
+    }
+
+    update() {
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      this.speed *= 0.96;
+      this.opacity -= 0.01;
+      this.life--;
+    }
+
+    draw() {
+      ctx.save();
+      ctx.font = `${this.size}px serif`;
+      ctx.globalAlpha = Math.max(0, this.opacity);
+      ctx.fillStyle = "red";
+      ctx.fillText("❤️", this.x, this.y);
+      ctx.restore();
+    }
+  }
+
+  function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (Math.random() < 0.05) {
+      const x = Math.random() * canvas.width;
+      const y = canvas.height;
+      const targetY = Math.random() * canvas.height / 2;
+      fireworks.push(new Firework(x, y, targetY));
+    }
+
+    for (let i = fireworks.length - 1; i >= 0; i--) {
+      fireworks[i].update();
+      fireworks[i].draw();
+      if (fireworks[i].exploded) fireworks.splice(i, 1);
+    }
+
+    for (let i = hearts.length - 1; i >= 0; i--) {
+      hearts[i].update();
+      hearts[i].draw();
+      if (hearts[i].life <= 0 || hearts[i].opacity <= 0) {
+        hearts.splice(i, 1);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+</script>
+</body>
+</html>
