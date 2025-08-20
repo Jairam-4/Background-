@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heart Fireworks Birthday</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: black;
+      height: 100%;
+      width: 100%;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="fireworksCanvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('fireworksCanvas');
+  const ctx = canvas.getContext('2d');
+  resizeCanvas();
+
+  window.addEventListener('resize', resizeCanvas);
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  const fireworks = [];
+  const particles = [];
+
+  let startTime = null;
+  let phaseStartTime = null;
+  let phase = 0; // 0: fireworks, 1: quote, 2: birthday
+
+  // ======== CLASSES ========
+
+  class Firework {
+    constructor(x, y, targetY) {
+      this.x = x;
+      this.y = y;
+      this.targetY = targetY;
+      this.speed = 4;
+      this.exploded = false;
+    }
+
+    update() {
+      this.y -= this.speed;
+      if (this.y <= this.targetY && !this.exploded) {
+        this.explode();
+        this.exploded = true;
+      }
+    }
+
+    explode() {
+      const count = 80;
+      const angleStep = (Math.PI * 2) / count;
+      for (let i = 0; i < count; i++) {
+        const angle = i * angleStep;
+        particles.push(new Particle(this.x, this.y, angle));
+      }
+
+      // Heart-shaped explosion
+      for (let i = 0; i < 30; i++) {
+        const t = Math.PI * 2 * Math.random();
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        const scale = 8;
+        particles.push(new Particle(
+          this.x + x * scale,
+          this.y + y * scale,
+          null,
+          "❤️"
+        ));
+      }
+    }
+
+    draw() {
+      if (!this.exploded) {
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  class Particle {
+    constructor(x, y, angle, char = null) {
+      this.x = x;
+      this.y = y;
+      this.speed = Math.random() * 3 + 2;
+      this.angle = angle || Math.random() * Math.PI * 2;
+      this.life = 100;
+      this.opacity = 1;
+      this.char = char;
+      this.color = char ? "rgba(255, 0, 0, 1)" : `hsl(${Math.random() * 360}, 100%, 60%)`;
+    }
+
+    update() {
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      this.speed *= 0.96;
+      this.life--;
+      this.opacity = this.life / 100;
+    }
+
+    draw() {
+      ctx.globalAlpha = this.opacity;
+      if (this.char) {
+        ctx.font = "20px serif";
+        ctx.fillText(this.char, this.x, this.y);
+      } else {
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ======== PHASE RENDERING ========
+
+  function drawBeautyQuote() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#d7d7d0";
+    ctx.textAlign = "center";
+
+    ctx.font = "bold 42px Arial, sans-serif";
+    ctx.fillText("Her beauty was a quiet storm,", canvas.width / 2, canvas.height / 2 - 30);
+    ctx.fillText("a memory etched in my heart long after she was gone", canvas.width / 2, canvas.height / 2 + 20);
+    ctx.fillText("with beauty...", canvas.width / 2, canvas.height / 2 + 70);
+  }
+
+  function drawBirthdayMessage() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#d7d7d0";
+    ctx.textAlign = "center";
+
+    ctx.font = "bold 70px Arial, sans-serif";
+    ctx.fillText("HAPPY BIRTHDAY", canvas.width / 2, canvas.height / 2);
+
+    ctx.font = "60px serif";
+    ctx.fillText("❤️", canvas.width / 2, canvas.height / 2 + 80);
+  }
+
+  // ======== MAIN ANIMATION LOOP ========
+
+  function animate(timestamp) {
+    if (!startTime) startTime = timestamp;
+    if (!phaseStartTime) phaseStartTime = timestamp;
+
+    const totalElapsed = timestamp - startTime;
+    const phaseElapsed = timestamp - phaseStartTime;
+
+    if (phase === 0) {
+      // Fireworks for 10 seconds
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (Math.random() < 0.05) {
+        const x = Math.random() * canvas.width;
+        const y = canvas.height;
+        const targetY = Math.random() * canvas.height / 2;
+        fireworks.push(new Firework(x, y, targetY));
+      }
+
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+        fireworks[i].update();
+        fireworks[i].draw();
+        if (fireworks[i].exploded) fireworks.splice(i, 1);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+
+      if (totalElapsed > 10000) {
+        phase = 1;
+        phaseStartTime = timestamp;
+      }
+
+    } else if (phase === 1) {
+      drawBeautyQuote();
+      if (phaseElapsed > 5000) {
+        phase = 2;
+        phaseStartTime = timestamp;
+      }
+    } else if (phase === 2) {
+      drawBirthdayMessage();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+</script>
+</body>
+</html>
